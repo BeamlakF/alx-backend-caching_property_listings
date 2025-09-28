@@ -27,3 +27,14 @@ def get_redis_cache_metrics():
     }
     logger.info(f"Redis Cache Metrics: {metrics}")
     return metrics
+
+def get_all_properties():
+    # Try to fetch from Redis cache
+    properties = cache.get('all_properties')
+    if properties is not None:
+        return properties  # cache hit
+
+    # Cache miss → fetch from database
+    properties = Property.objects.all()
+    cache.set('all_properties', properties, 3600)  # store in Redis for 1 hour
+    return properties
