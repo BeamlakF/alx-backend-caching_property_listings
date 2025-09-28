@@ -6,3 +6,4 @@ from .models import Property
 @receiver([post_save, post_delete], sender=Property)
 def invalidate_property_cache(sender, **kwargs):
     cache.delete('all_properties')
+

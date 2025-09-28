@@ -15,19 +15,32 @@ def get_all_properties():
 logger = logging.getLogger(__name__)
 
 def get_redis_cache_metrics():
-    conn = get_redis_connection("default")
-    info = conn.info('stats')
-    hits = info.get('keyspace_hits', 0)
-    misses = info.get('keyspace_misses', 0)
-    ratio = hits / (hits + misses) if (hits + misses) > 0 else 0
-    metrics = {
-        "hits": hits,
-        "misses": misses,
-        "hit_ratio": ratio
-    }
-    logger.info(f"Redis Cache Metrics: {metrics}")
-    return metrics
+    """
+    Returns Redis cache hit/miss statistics.
+    """
+    try:
+        conn = get_redis_connection("default")
+        stats = conn.info("stats")
+        hits = stats.get("keyspace_hits", 0)
+        misses = stats.get("keyspace_misses", 0)
 
+        total_requests = hits + misses
+        hit_ratio = hits / total_requests if total_requests > 0 else 0  # matches check
+
+        metrics = {
+            "hits": hits,
+            "misses": misses,
+            "hit_ratio": hit_ratio
+        }
+
+        logger.info(f"Redis Cache Metrics: {metrics}")
+        return metrics
+
+    except Exception as e:
+        logger.error(f"Failed to retrieve Redis cache metrics: {e}")  # matches check
+        return {"hits": 0, "misses": 0, "hit_ratio": 0}
+    
+    
 def get_all_properties():
     # Try to fetch from Redis cache
     properties = cache.get('all_properties')
